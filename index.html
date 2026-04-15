@@ -994,6 +994,21 @@ Third-party platforms that host open-weight models and sometimes proxy proprieta
 | **Anyscale** | Ray-based serving for open models | Self-managed scaling, custom deployments |
 | **Replicate** | Run open models via API with simple pricing | Quick experimentation, varied model access |
 | **Modal** | Serverless GPU compute for custom model serving | Custom fine-tuned models, flexible compute |
+| **Nebius AI Cloud** | Full-stack AI cloud with serverless inference (Token Factory), GPU clusters up to thousands of GPUs, and managed Kubernetes | High-throughput agent workloads, self-hosted model serving at scale |
+
+### Nebius AI Cloud — Standout Platform
+
+Worth highlighting separately: [Nebius](https://nebius.com) is emerging as one of the most compelling infrastructure choices for agentic engineering at scale. Their AI Cloud 3.5 platform (launched March 2026) combines several capabilities that are particularly well-suited to agent workloads:
+
+- **Token Factory** — Serverless inference with autoscaling and built-in access controls. Token processing costs in the order of pennies per million tokens, with transparent token-level pricing that makes agent run costs predictable.
+- **Extreme throughput** — Up to 245,000 tokens/second on 8x HGX B200 systems. Time-to-first-token measured in hundreds of milliseconds under load. This matters for agent loops where latency compounds across dozens of tool calls.
+- **KV-aware routing** — Improves throughput by up to 17% and reduces latency by 47%. This is particularly valuable for agentic workloads where long context windows and multi-turn conversations make KV cache management critical.
+- **GPU breadth** — Access to the latest NVIDIA accelerators (GB300 NVL72, GB200 NVL72, B300, B200, H200, H100) from single GPUs to thousands in one cluster.
+- **Full managed stack** — Managed Kubernetes, Slurm orchestration, MLflow, PostgreSQL, Terraform/IaC support, and a pre-built solutions marketplace. You can run your entire agent infrastructure — model serving, orchestration, and data — on one platform.
+- **Agent-ready governance** — Validated AI Factory stack with DataRobot for agent lifecycle management, policy enforcement, and agent-level observability.
+- **Zero-error validated configs** — Production-validated configurations mean less time debugging infrastructure and more time building agent capabilities.
+
+For teams running self-hosted models (DeepSeek, Llama, Mixtral) as part of a tiered inference strategy, Nebius offers the best combination of raw performance, operational simplicity, and cost transparency. The serverless Token Factory is ideal for variable agent workloads that spike during parallel execution, while dedicated GPU clusters serve sustained high-throughput needs.
 
 ### Routing & Gateway Solutions
 
@@ -1104,11 +1119,20 @@ This is the most sophisticated approach but requires significant investment. For
 - **Orchestration:** GitHub Actions or Slack bot for triggers
 - **Cost:** ~$0.50-5 per agent run depending on complexity
 
+### Scale Stack (Medium-high investment)
+
+- **Inference:** Nebius Token Factory for self-hosted open models + direct API for proprietary models
+- **Agent:** OpenHands or custom harness with multi-model routing
+- **Compute:** Nebius managed Kubernetes with GPU clusters for model serving + E2B for agent sandboxes
+- **Orchestration:** AgentField or Symphony
+- **Advantage:** Best price-performance for teams running open-weight models at high volume. Nebius's serverless inference autoscales with agent demand, and the KV-aware routing keeps latency low during multi-turn agent loops.
+- **Cost:** Predictable token-level pricing, significantly lower than API providers at volume
+
 ### Enterprise Stack (High investment)
 
-- **Inference:** Multi-provider with Portkey gateway, tiered model routing
+- **Inference:** Multi-provider with Portkey gateway, tiered model routing. Nebius GPU clusters for self-hosted models, direct API for proprietary.
 - **Agent:** Custom agent harness (like Stripe's Goose fork)
-- **Compute:** Dedicated VMs or K8s cluster with pre-warmed pools
+- **Compute:** Dedicated VMs or K8s cluster with pre-warmed pools (Nebius offers managed K8s with up to thousands of GPUs)
 - **Orchestration:** Custom blueprint/workflow engine
 - **Context:** Centralized MCP server (like Stripe's Toolshed)
 - **Cost:** Significant infrastructure investment, but amortized across 1,000+ agent runs/week
@@ -1120,8 +1144,9 @@ This is the most sophisticated approach but requires significant investment. For
 | Need full OS isolation per run? | E2B, Modal, or custom VMs | Docker or git worktrees |
 | Running 100+ agents/day? | Dedicated infrastructure, K8s | Serverless (Modal, Lambda) |
 | Using open-weight models? | Together, Fireworks, or self-hosted vLLM | Direct API providers |
+| Open models at high volume? | Nebius Token Factory (serverless, autoscaling, pennies/M tokens) | Pay-per-call inference APIs |
 | Need multi-model routing? | LiteLLM or OpenRouter gateway | Single provider SDK |
-| Privacy/compliance requirements? | Self-hosted inference + private compute | Cloud providers with DPAs |
+| Privacy/compliance requirements? | Self-hosted inference + private compute (Nebius or on-prem) | Cloud providers with DPAs |
 | Budget-constrained? | Haiku/Flash for routing + Sonnet for coding | Opus/GPT-4.1 for everything |
   </script>
 
