@@ -171,14 +171,21 @@ nav .container {
   font-size: 0.85rem;
 }
 
-/* Tables */
+/* Tables — break out of the narrow prose column and scroll horizontally */
 .markdown-body table {
-  width: 100%;
+  /* Break out to full viewport width */
+  width: calc(100vw - 3rem);
+  max-width: 1400px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
   border-collapse: collapse;
   font-size: 0.9rem;
-  margin: 1rem 0 1.5rem;
+  margin: 1.5rem auto;
   display: block;
   overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 .markdown-body thead {
   background: var(--bg-secondary);
@@ -199,10 +206,21 @@ nav .container {
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
   vertical-align: top;
+  white-space: normal;
+  min-width: 120px;
 }
 .markdown-body tr:last-child td { border-bottom: none; }
 .markdown-body tr:hover td { background: rgba(26, 26, 37, 0.5); }
-.markdown-body td:first-child { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.markdown-body td:first-child { font-weight: 600; color: var(--text-primary); white-space: nowrap; min-width: 140px; }
+
+@media (max-width: 768px) {
+  .markdown-body table {
+    width: calc(100vw - 1rem);
+    left: auto;
+    transform: none;
+    margin: 1rem -1.5rem;
+  }
+}
 
 /* Blockquotes */
 .markdown-body blockquote {

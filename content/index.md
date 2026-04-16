@@ -71,8 +71,21 @@ How companies organize around agents:
 - [Organizational Patterns](organizations.md#organizational-patterns) — Agent as team member, agent swarm, agent-assisted on-call
 - [Infrastructure You Need](organizations.md#the-infrastructure-you-need) — Must-have, should-have, nice-to-have
 
-### [Infrastructure](infrastructure.md)
-Inference solutions, serverless hosting, and choosing your stack:
-- [Inference Solutions](infrastructure.md#inference-solutions) — API providers, inference platforms, routing gateways, self-hosted
-- [Agent Hosting & Execution](infrastructure.md#agent-hosting--execution-platforms) — 50+ vendors across 6 tiers: turnkey, agent-optimized, sandbox, serverless, Cloud Mac, self-hosted
-- [Choosing Your Stack](infrastructure.md#choosing-your-stack) — Starter, growth, and enterprise stack recommendations
+### [Inference](inference.md)
+LLM inference solutions for agent workloads:
+- [Direct API Providers](inference.md#direct-api-providers) — Anthropic, OpenAI, Google, xAI, DeepSeek
+- [Inference Platforms](inference.md#inference-platforms) — Together, Fireworks, Groq, Cerebras, Nebius
+- [Nebius AI Cloud](inference.md#nebius-ai-cloud--standout-platform) — Standout platform for agentic engineering at scale
+- [Routing & Gateway](inference.md#routing--gateway-solutions) — LiteLLM, OpenRouter, Portkey, Kalibr
+- [Self-Hosted Inference](inference.md#self-hosted-inference) — vLLM, SGLang, Ollama, TGI, llama.cpp
+- [Inference Strategy](inference.md#inference-strategy-for-agents) — Tiered model routing and cost optimization
+
+### [Hosting & Execution](infrastructure.md)
+Where agents actually run — 50+ vendors across 6 tiers:
+- [Hosting Decision Framework](infrastructure.md#the-hosting-decision-framework) — Turnkey, Agent-Optimized, Sandbox, Serverless, Cloud Mac, Self-Hosted
+- [Turnkey Managed Platforms](infrastructure.md#turnkey-managed-platforms) — ZenClaw, KlausAI, Coral, Lindy
+- [Code Execution Sandboxes](infrastructure.md#code-execution-sandboxes) — E2B, Sprites.dev, Daytona, Modal, + 9 more
+- [Agent Orchestration](infrastructure.md#agent-orchestration) — LangGraph Cloud, Temporal, Kagent
+- [Cloud Mac Hosting](infrastructure.md#cloud-mac-hosting) — MacStadium, AWS EC2 Mac, Scaleway, + 3 more
+- [Self-Hosted Infrastructure](infrastructure.md#self-hosted-infrastructure) — Nebius, AWS, Hetzner, Fly.io, + 10 more
+- [Choosing Your Stack](infrastructure.md#choosing-your-stack) — Starter, growth, scale, and enterprise recommendations
