@@ -71,6 +71,17 @@ How companies organize around agents:
 - [Organizational Patterns](organizations.md#organizational-patterns) — Agent as team member, agent swarm, agent-assisted on-call
 - [Infrastructure You Need](organizations.md#the-infrastructure-you-need) — Must-have, should-have, nice-to-have
 
+### [Sandboxes](sandboxes.md)
+Dedicated deep-dive on sandbox infrastructure — the single most important layer for autonomous agents:
+- [Why Sandboxes Matter](sandboxes.md#why-sandboxes-matter-for-agents) — Safe execution, reproducibility, state, observability
+- [Core Use Cases](sandboxes.md#core-use-cases) — Code execution, tree-of-thought, rollback, persistent envs, multi-tenant, Apple-native, CDEs
+- [Isolation Tiers](sandboxes.md#isolation-tiers--the-security-ladder) — Process → container → gVisor → microVM → VM → bare metal
+- [Purpose-Built Agent Sandboxes](sandboxes.md#purpose-built-agent-sandboxes) — 14 vendors with isolation, persistence, cold start, GPU data
+- [Contree Deep Dive](sandboxes.md#contree--the-git-native-sandbox) — Git-native sandboxing, MCP integration, tree-of-thought patterns
+- [Cloud Dev Environments](sandboxes.md#cloud-development-environments-cdes) — Persistent dev envs (Codespaces, Gitpod, Coder, Vercel Sandbox)
+- [Agent Patterns](sandboxes.md#agent-patterns-enabled-by-modern-sandboxes) — Checkpoint-explore-commit, golden pool, destructive safety, sandbox-as-context
+- [Integration Examples](sandboxes.md#integration-examples) — MCP, Python SDK, custom harness patterns
+
 ### [Inference](inference.md)
 LLM inference solutions for agent workloads:
 - [Direct API Providers](inference.md#direct-api-providers) — Anthropic, OpenAI, Google, xAI, DeepSeek

@@ -25,81 +25,33 @@ The agent hosting market has segmented into six distinct tiers, each with differ
 
 ## Code Execution Sandboxes
 
-Isolated environments where agents execute generated code safely. The most consequential security distinction is the isolation model.
+Isolated environments where agents execute generated code safely. This is the single most important layer for autonomous coding agents.
 
-| Vendor | Isolation | Persistence | Cold Start | GPU | Price | Strength |
-|--------|----------|------------|-----------|-----|-------|----------|
-| **Contree** | microVM (Nebius) | Git-like branching + snapshots | Sub-sec | Yes | Usage | Git-style fork/rollback, MCP server + Python SDK, Nebius-backed |
-| **E2B** | Firecracker microVM | Ephemeral / pause (beta) | ~150ms | No | $100 credit | Dedicated kernel, SDK-first, SOC 2 |
-| **Sprites.dev** | Firecracker microVM | Indefinite + hibernate | Instant | No | Per-sec | Hibernate ~300ms, zero idle cost |
-| **Daytona** | Docker containers | Stateful, unlimited | ~90ms | Yes | $200 credit | GPU support, fastest creation |
-| **Modal** | gVisor sandbox | Snapshots | Sub-sec | Yes | $30/mo | 50K+ concurrency, full GPU, SOC 2 |
-| **Runloop** | Custom hypervisor | Snapshots | Sub-sec | No | Contact | SOC 2, 10K+ parallel, SWE-bench focus |
-| **Northflank** | microVM / gVisor | Stateful | Sub-sec | Yes (H100s) | Usage | Enterprise VPC, multi-cloud, SOC 2 |
-| **AgentComputer** | Ubuntu VMs | 25 GB persistent | Sub-sec | No | $20/mo | Built for Claude/Codex agents |
-| **Microsandbox** | libkrun microVM | Stateful | Sub-sec | No | Free (OSS) | Network-layer secret injection, self-hosted |
-| **Zeroboot** | Firecracker CoW | Snapshots | Sub-ms (0.79ms) | No | Free (OSS) | 480x memory density, prototype |
-| **AIO Sandbox** | Docker | Stateful | Sub-sec | No | Free (OSS) | Browser+Shell+IDE+MCP, ByteDance |
-| **OpenSandbox** | Docker / K8s | Stateful | Sub-sec | No | Free (OSS) | Protocol-driven K8s runtime, Alibaba |
-| **Quilt** | Linux namespaces | Stateful | Sub-sec | No | Free (OSS) | Inter-container networking, Rust |
-| **CodeSandbox SDK** | microVMs | Forking/snapshots | Sub-sec | No | Usage | SOC 2, owned by Together AI |
+**For in-depth coverage, see the dedicated [Sandboxes](sandboxes.md) page**, which covers:
 
-**Isolation tiers matter:** Shared kernel containers (Docker, gVisor) provide process-level separation but share an OS kernel. Firecracker microVMs (E2B, Sprites.dev) provide dedicated kernels. Dedicated VMs (Coral, AgentComputer) provide the strongest isolation. Enterprises handling sensitive data should require dedicated kernel isolation at minimum.
+- [Why sandboxes matter for agents](sandboxes.md#why-sandboxes-matter-for-agents)
+- [Core use cases](sandboxes.md#core-use-cases) — code execution, tree-of-thought, rollback, persistent environments, multi-tenant fleets, Apple-native, CDEs
+- [Isolation tier ladder](sandboxes.md#isolation-tiers--the-security-ladder) — process → container → gVisor → microVM → VM → bare metal
+- [All 14 purpose-built agent sandbox vendors](sandboxes.md#purpose-built-agent-sandboxes)
+- [Contree deep dive](sandboxes.md#contree--the-git-native-sandbox) — Git-native sandboxing for tree-of-thought agent workflows
+- [Cloud Dev Environments (CDEs)](sandboxes.md#cloud-development-environments-cdes) — Codespaces, Gitpod, Coder, Vercel Sandbox, etc.
+- [Open-source isolation primitives](sandboxes.md#open-source-isolation-primitives) — Firecracker, Kata, gVisor, etc.
+- [Agent patterns](sandboxes.md#agent-patterns-enabled-by-modern-sandboxes) — checkpoint-explore-commit, golden pool, destructive safety, sandbox-as-context
+- [Integration examples](sandboxes.md#integration-examples) — MCP, Python SDK, custom harness code
 
-### Contree — Git-Native Sandbox for Agents
+### Quick Reference Table
 
-[Contree](https://contree.dev) is a standout in the sandbox category: built by [Nebius](https://nebius.com), it combines VM-level isolation with a Git-inspired branching model that's uniquely suited to agent workloads. Rather than treating sandboxes as ephemeral containers, Contree treats them like a version-controlled filesystem — agents can checkpoint, branch, explore multiple solution paths in parallel, and instantly roll back without re-execution.
-
-**Why this matters for agents:**
-
-- **Branch-and-explore workflows** — An agent can fork from any checkpoint to try multiple approaches, evaluate outcomes, and continue down the best path. This maps directly to how reasoning agents should operate (explore, evaluate, commit) but is natively impossible in traditional sandbox platforms.
-- **VM-level isolation with container efficiency** — Hardware-level guarantees for untrusted code execution, without the overhead of spinning up full VMs for each run.
-- **OCI-compliant image support** — Bring any Docker Hub / GHCR image as a sandbox base. The mental model aligns with Git: images are commits, branches enable parallel work, tags are snapshots.
-- **MCP-native** — First-class MCP server (`contree-mcp`) with 17 tools (run, rsync, import_image, list_images, upload, download, registry_auth, operation management, etc.) — drops into any MCP-compatible agent like Claude Code without glue code.
-- **Python SDK** — Sync and async clients (`contree-sdk`) with image and session abstractions for programmatic use.
-- **Resource tracking** — Built-in monitoring of CPU time, memory, and I/O per execution.
-- **Async operations** — Long-running tasks with polling and cancellation — essential for agent workloads that may run for minutes or hours.
-
-**Unique agent patterns this enables:**
-
-- *Tree-of-thought sandboxing* — Fork the environment at each decision point, run parallel branches to evaluate, then merge the winner. This is the AgentField "branching and rollback" pattern made native.
-- *7,000 preloaded environments* — Use checkpoint-and-branch to instantiate thousands of pre-configured environments instantly, then fork for per-task work. Ideal for benchmarking, batch agent runs, or large-scale eval harnesses.
-- *Rollback-on-failure* — If an agent's code execution produces a bad state, roll back the entire sandbox in milliseconds rather than rebuilding from scratch.
-
-Contree is particularly well-suited to teams already using Nebius for inference (see [Inference](inference.md#nebius-ai-cloud--standout-platform)) — the combined stack gives you agent sandboxing, Token Factory serverless inference, and GPU clusters all on one provider with consistent pricing and operational tooling.
-
-**Resources:** [Docs](https://docs.contree.dev/) · [MCP Quickstart](https://docs.contree.dev/mcp/quickstart.html) · [Python SDK](https://docs.contree.dev/sdk/python_sdk/index.html) · [Contree Skill (Claude Code)](https://github.com/opencolin/contree-skill/)
-
-### Cloud Development Environments (CDEs)
-
-Full dev environments that can host coding agents with persistent state, similar to Stripe's devbox approach but as managed services.
-
-| Vendor | Isolation | Price | Key Strength |
-|--------|----------|-------|-------------|
-| **GitHub Codespaces** | Container per workspace | Usage-based | Native GitHub integration |
-| **Gitpod / Gitpod Flex** | Container per workspace | Free + paid | Ephemeral per-PR dev environments |
-| **Coder** | Self-hosted CDE | OSS + enterprise | Self-hosted dev env orchestration |
-| **DevPod** | Client-only CDE (Loft Labs) | Free OSS | BYO infra dev containers, no server needed |
-| **JetBrains Space / CodeCanvas** | Managed | Paid | JetBrains IDE-native cloud environments |
-| **Replit Sandboxes / Nix** | Nix sandbox | Freemium | Nix-based reproducible sandboxes |
-| **Vercel Sandbox** | Vercel-hosted | Usage-based | Ephemeral exec for AI workloads, Vercel-native |
-| **Cloudflare Sandbox / Containers** | Edge containers | Usage-based | Edge-deployed isolated containers |
-| **StackBlitz WebContainers** | In-browser Node | Free + commercial API | Full Node stack in-browser, no server |
-| **Val Town** | Serverless JS | Free + paid | Write and share server-side JS instantly |
-
-### Open-Source Isolation Primitives
-
-The underlying isolation technologies that higher-level sandboxes build on.
-
-| Tech | Maintainer | Key Strength |
-|------|-----------|-------------|
-| **Firecracker** | AWS (OSS) | MicroVM hypervisor powering Lambda/Fargate |
-| **Kata Containers** | OpenInfra Foundation | VM-isolated OCI-compatible containers |
-| **gVisor** | Google | User-space kernel via syscall interception |
-| **Nsjail** | Google | Lightweight Linux process jail via namespaces |
-| **Firejail** | OSS community | SUID sandbox with seccomp |
-| **Bubblewrap** | Flatpak project | Unprivileged Linux sandboxing |
-| **Jailkit** | OSS community | Classic chroot-based user jails |
+| Vendor | Isolation | Persistence | Cold Start | GPU | Key Strength |
+|--------|----------|------------|-----------|-----|-------------|
+| **Contree** | microVM (Nebius) | Git-like branching | Sub-sec | Yes | Git-style fork/rollback, MCP + Python SDK |
+| **E2B** | Firecracker microVM | Ephemeral / pause | ~150ms | No | Dedicated kernel, SDK-first, SOC 2 |
+| **Sprites.dev** | Firecracker microVM | Hibernate | Instant | No | ~300ms hibernate, zero idle cost |
+| **Daytona** | Docker containers | Stateful | ~90ms | Yes | GPU support, fastest creation |
+| **Modal** | gVisor sandbox | Snapshots | Sub-sec | Yes | 50K+ concurrency, full GPU |
+| **Runloop** | Custom hypervisor | Snapshots | Sub-sec | No | 10K+ parallel, SWE-bench focus |
+| **Northflank** | microVM / gVisor | Stateful | Sub-sec | Yes (H100s) | Enterprise VPC, multi-cloud |
+| **AgentComputer** | Ubuntu VMs | 25 GB persistent | Sub-sec | No | Built for Claude/Codex agents |
+| **+ 6 OSS sandboxes** | Various | Various | Various | Limited | [See full table](sandboxes.md#purpose-built-agent-sandboxes) |
 
 ---
 
