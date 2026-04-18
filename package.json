@@ -1,15 +1,12 @@
 {
-  "name": "agentic-engineering-docs",
+  "name": "agentic-engineering",
   "version": "1.0.0",
-  "description": "Mintlify documentation portal for agentic engineering — autonomous coding agents, architectural patterns, and infrastructure.",
+  "description": "Agentic Engineering — reference site (front end) and documentation portal (Mintlify).",
   "private": true,
   "scripts": {
-    "dev": "mint dev",
-    "broken-links": "mint broken-links",
-    "upgrade": "mint upgrade"
-  },
-  "devDependencies": {
-    "mint": "^4.0.0"
+    "build": "bash build.sh",
+    "docs:dev": "cd docs && mint dev",
+    "docs:broken-links": "cd docs && mint broken-links"
   },
   "repository": {
     "type": "git",
