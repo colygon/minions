@@ -72,6 +72,22 @@ How agents are sandboxed from production and from each other.
 
 Stripe chose EC2 devboxes because git worktrees "wouldn't scale at Stripe." But for most teams, worktrees or Docker provide sufficient isolation at far lower cost. The right choice depends on codebase size, security requirements, and parallelization needs.
 
+### Sub-Pattern: Agent Outside the Sandbox
+
+A secondary architectural decision, independent of isolation tech: **where does the agent loop itself run, relative to the sandbox it controls?**
+
+- **Agent inside sandbox** — The LLM call, tool dispatcher, and sandbox share a lifecycle. Simple to build, but the sandbox is both the execution environment AND the control plane. If the sandbox dies, the agent dies.
+- **Agent outside sandbox** — The agent runs as a durable workflow in a separate compute layer and calls into the sandbox via tools (file read/edit, shell, search). The sandbox is pure execution; the agent is pure orchestration.
+
+[Vercel Open Agents](approaches.md#vercel-open-agents) is the canonical example of the "agent outside" pattern. Its principle: *"The agent is not the sandbox."* Benefits:
+
+- Agent survives sandbox hibernation — sandbox sleeps, agent keeps state
+- Chat turns span many workflow steps that survive request timeouts
+- Model/provider swaps don't touch the sandbox
+- Sandbox stays single-purpose (code execution), not a control plane
+
+Stripe Minions takes the opposite approach: the agent lives inside the devbox because the devbox is long-lived and pre-warmed. Both work — the trade-off is between sandbox lifecycle independence (agent outside) and simplicity (agent inside).
+
 ---
 
 ## 2. Orchestration Models

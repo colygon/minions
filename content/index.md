@@ -44,6 +44,7 @@ Deep dives into each major system and framework:
 - [Patchwork](approaches.md#patchwork) — Patchflows, closest to Stripe's blueprint pattern
 - [Goose](approaches.md#goose) — MCP-native, the ancestor Stripe forked for Minions
 - [Claude Managed Agents](approaches.md#claude-managed-agents) — Anthropic's vertically integrated harness + sandbox + tools, $0.08/agent-hour, Notion/Rakuten/Asana as early adopters
+- [Vercel Open Agents](approaches.md#vercel-open-agents) — 3.7K stars, MIT-licensed reference template, "agent outside the sandbox" architecture, durable workflows + Vercel Sandbox + GitHub App
 - [OpenAI Symphony](approaches.md#openai-symphony) — 15K+ stars, 6-layer orchestration, work management over agent supervision
 - [Mastra](approaches.md#mastra) — TypeScript framework for building custom agent systems
 - [OpenClaw](approaches.md#openclaw) — 355K stars, self-hosted assistant with messaging integration

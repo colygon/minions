@@ -88,6 +88,7 @@ Deep dives into each major system and framework:
 - [Patchwork](approaches.md#patchwork) — Patchflows, closest to Stripe's blueprint pattern
 - [Goose](approaches.md#goose) — MCP-native, the ancestor Stripe forked for Minions
 - [Claude Managed Agents](approaches.md#claude-managed-agents) — Anthropic's vertically integrated harness + sandbox + tools, $0.08/agent-hour, Notion/Rakuten/Asana as early adopters
+- [Vercel Open Agents](approaches.md#vercel-open-agents) — 3.7K stars, MIT-licensed reference template, "agent outside the sandbox" architecture, durable workflows + Vercel Sandbox + GitHub App
 - [OpenAI Symphony](approaches.md#openai-symphony) — 15K+ stars, 6-layer orchestration, work management over agent supervision
 - [Mastra](approaches.md#mastra) — TypeScript framework for building custom agent systems
 - [OpenClaw](approaches.md#openclaw) — 355K stars, self-hosted assistant with messaging integration
@@ -551,6 +552,114 @@ This is disruptive to the Layer B agent-sandbox market: teams that would have us
 
 ---
 
+## Vercel Open Agents
+
+- **Type:** Open Source Template (MIT)
+- **Stars:** 3.7K (396 forks)
+- **GitHub:** https://github.com/vercel-labs/open-agents
+- **Demo:** https://open-agents.dev
+- **Template:** https://vercel.com/templates/template/open-agents
+
+Vercel's reference architecture for building cloud coding agents. Open Agents is not a hosted product — it's a forkable, customizable MIT-licensed template that ships a complete cloud agent system: web UI, durable workflow runtime, sandbox orchestration, and GitHub App integration. Deploy it to Vercel in minutes, then modify it to fit your use case.
+
+### Architectural Principle: "The Agent Is Not the Sandbox"
+
+The most important design decision in Open Agents: the agent executes **outside** the sandbox, not within it. The agent runs as a durable workflow on Vercel's Workflow SDK. The sandbox is only the execution environment for code the agent wants to run.
+
+This separation matters because:
+
+- **Agent execution decouples from request lifecycles** — Chat turns can span many persisted workflow steps that survive request timeouts
+- **Sandbox hibernates and resumes independently** — Sandbox goes to sleep without killing the agent
+- **Model/provider flexibility** — Swap models without touching the sandbox
+- **Sandbox stays single-purpose** — It's an execution environment, not a control plane
+
+### Three-Layer Architecture
+
+1. **Web Layer** — Next.js app handling auth, sessions, chat UI, streaming. Built on Vercel AI SDK + Chat SDK.
+2. **Agent Workflow** — Durable workflow execution via Vercel Workflow SDK. Streaming, cancellation, persistent state across multi-step runs. Reconnectable streams.
+3. **Sandbox VM** — Vercel Sandbox (Firecracker microVM) with filesystem, shell, git, dev servers. Exposes ports 3000, 5173, 4321, 8000. Snapshot-based resume. Hibernates after inactivity.
+
+### Repo Structure
+
+```
+apps/web         — Next.js, workflows, auth, chat UI
+packages/agent   — agent loop, tools, subagents, skills
+packages/sandbox — sandbox abstraction + Vercel integration
+packages/shared  — utilities
+```
+
+### Agent Capabilities
+
+- **Tool suite** — File read/write/edit, grep/glob search, shell commands, task management, web fetch, skill invocation
+- **Skills system** — Modular agent skills in `.agents/skills` with a `skills-lock.json` for versioning (compatible with [vercel-labs/skills](https://github.com/vercel-labs/skills) `npx skills`)
+- **Subagents** — Multi-agent coordination built in
+- **Repo cloning** — Clone any GitHub repo into the sandbox, work on branches
+- **Auto-commit / auto-PR** — Optional, preference-driven (not always on). Can open PRs with summaries.
+- **Session sharing** — Read-only share links for audit/review
+- **Voice input** — ElevenLabs transcription for spoken commands
+- **MCP tool support** — Connect external tools via Model Context Protocol
+
+### Stack
+
+- **Frameworks:** Next.js, Tailwind CSS
+- **SDKs:** Vercel Workflow SDK, Vercel AI SDK, Vercel Chat SDK
+- **Database:** PostgreSQL (required) — works with Neon by default
+- **Cache:** Redis/Upstash KV (optional, for metadata)
+- **Package manager:** Bun (local dev)
+- **Runtime:** 99.3% TypeScript
+
+### Deployment Environment Variables
+
+- **Minimum:** `POSTGRES_URL`, `JWE_SECRET`
+- **Recommended:** `ENCRYPTION_KEY` + Vercel OAuth credentials
+- **Full-featured:** GitHub App (ID, client secret, private key, webhook secret)
+- **Optional:** Redis/KV, ElevenLabs API, custom sandbox snapshots
+
+### GitHub App Integration
+
+Uses the GitHub App's user authorization flow:
+- Repository access via installation
+- Private repo cloning
+- Branch pushing
+- PR creation with automated summaries
+- Webhook events for status updates
+
+Organization-level installations require the app to be public.
+
+### Why This Matters
+
+Open Agents is significant because it codifies a production-ready cloud agent architecture in an MIT-licensed template. Teams that would otherwise spend weeks assembling a web UI + durable workflow + sandbox + GitHub integration can fork Open Agents and customize it. It's the "reference implementation" for the Vercel Agents platform (AI Gateway + Workflow + Sandbox) and a pragmatic starting point for building Claude Managed Agents / Stripe Minions-style systems on Vercel infra.
+
+### When to Pick Open Agents
+
+- You want a production-ready starting point instead of building from scratch
+- You're already on Vercel or want to be
+- You want full control over the agent harness (unlike Claude Managed Agents)
+- You want the "agent outside the sandbox" architectural pattern
+- You need durable multi-step workflows with streaming
+- You want GitHub App integration out of the box
+
+### When to Pick Something Else
+
+- Fastest time-to-market with zero infra → [Claude Managed Agents](approaches.md#claude-managed-agents)
+- Tree-search / branching-heavy workflows → [Contree](sandboxes.md#contree--the-git-native-sandbox) + custom harness
+- Non-Vercel deployment target → AgentField or a custom stack
+- Heavy GPU requirements → Modal-based harness instead
+
+### Related Vercel Agent Products
+
+Open Agents is the community template. Vercel also ships a broader **Vercel Agents** platform that includes:
+
+- **AI Gateway** — Unified endpoint for model routing, provider failover, embeddings (see [Inference](inference.md#routing--gateway-solutions))
+- **Vercel Sandbox** — Firecracker microVM execution (see [Sandboxes](sandboxes.md#purpose-built-agent-sandboxes))
+- **Vercel Workflow SDK** — Durable execution primitives
+- **Vercel AI SDK** — TypeScript toolkit for streaming, tool use, structured outputs
+- **Vercel Agent** — Stack-aware agent for the Vercel platform itself
+
+Open Agents stitches these together into a reference application — it's both a product demonstration and a production-ready template.
+
+---
+
 ## OpenAI Symphony
 
 - **Type:** Open Source (Apache 2.0)
@@ -691,6 +800,22 @@ How agents are sandboxed from production and from each other.
 ### Key Insight
 
 Stripe chose EC2 devboxes because git worktrees "wouldn't scale at Stripe." But for most teams, worktrees or Docker provide sufficient isolation at far lower cost. The right choice depends on codebase size, security requirements, and parallelization needs.
+
+### Sub-Pattern: Agent Outside the Sandbox
+
+A secondary architectural decision, independent of isolation tech: **where does the agent loop itself run, relative to the sandbox it controls?**
+
+- **Agent inside sandbox** — The LLM call, tool dispatcher, and sandbox share a lifecycle. Simple to build, but the sandbox is both the execution environment AND the control plane. If the sandbox dies, the agent dies.
+- **Agent outside sandbox** — The agent runs as a durable workflow in a separate compute layer and calls into the sandbox via tools (file read/edit, shell, search). The sandbox is pure execution; the agent is pure orchestration.
+
+[Vercel Open Agents](approaches.md#vercel-open-agents) is the canonical example of the "agent outside" pattern. Its principle: *"The agent is not the sandbox."* Benefits:
+
+- Agent survives sandbox hibernation — sandbox sleeps, agent keeps state
+- Chat turns span many workflow steps that survive request timeouts
+- Model/provider swaps don't touch the sandbox
+- Sandbox stays single-purpose (code execution), not a control plane
+
+Stripe Minions takes the opposite approach: the agent lives inside the devbox because the devbox is long-lived and pre-warmed. Both work — the trade-off is between sandbox lifecycle independence (agent outside) and simplicity (agent inside).
 
 ---
 
@@ -886,6 +1011,7 @@ Side-by-side feature comparison of all major agentic coding approaches.
 | **Patchwork** | 1.5K | Yes | Patchflows | No | No | Yes (CI/CD) | No | Open Source |
 | **Goose** | 41K | No (interactive) | No | No | Yes (70+ tools) | No | No | Apache 2.0 |
 | **Symphony** | 15K+ | Yes | 6-layer architecture | Worktrees | Via integrations | Yes (CI-gated) | Yes (orchestrated) | Apache 2.0 |
+| **Vercel Open Agents** | 3.7K | Yes | Vercel Workflow SDK (durable) | Vercel Sandbox (microVM) | Yes (MCP) | Via tools | Subagents built-in | MIT |
 | **Mastra** | 22.9K | Framework | Workflows | Configurable | Yes (MCP) | Via workflows | Via workflows | Apache 2.0 |
 | **OpenClaw** | 355K | Via skills | No | Via NemoClaw | No | No | Yes (sessions) | Open Source |
 | **Rivet Sandbox** | 1.3K | Infrastructure | No | Yes (multi-runtime) | No | No | API-level | Open Source |
@@ -1138,6 +1264,7 @@ Middleware that sits between agents and inference providers, adding reliability,
 | **Portkey** | AI gateway with caching, retries, load balancing, and observability | Production agent deployments |
 | **Helicone** | Observability and proxy layer for LLM calls with cost tracking | Debugging agent behavior, cost analysis |
 | **Kalibr** | Autonomous cost/performance optimization via Thompson Sampling; hooks into every LLM call and routes to most cost-effective model | Production agents seeking order-of-magnitude cost reduction |
+| **Vercel AI Gateway** | Unified endpoint for model routing, provider failover, secure embeddings/retrieval — part of the Vercel Agents platform | Vercel-deployed agents, Open Agents template stack |
 
 ---
 
@@ -1382,6 +1509,7 @@ The core vendor landscape — sandboxes designed specifically for running AI-gen
 | **OpenSandbox** | Docker / K8s | Stateful | Sub-sec | No | Free (OSS) | Protocol-driven K8s runtime, Alibaba-backed |
 | **Quilt** | Linux namespaces | Stateful | Sub-sec | No | Free (OSS) | Inter-container networking, Rust |
 | **CodeSandbox SDK** | microVMs | Forking/snapshots | Sub-sec | No | Usage | SOC 2, owned by Together AI |
+| **Vercel Sandbox** | Firecracker microVM | Snapshot resume + hibernate | Sub-sec | No | Usage | Part of Vercel Agents stack, powers Open Agents template, dev-server port exposure (3000/5173/4321/8000) |
 
 ---
 
@@ -1818,6 +1946,7 @@ General-purpose workflow engines that handle failure, retries, and state across 
 | **Convex Workflows** | Durable workflows in reactive DB | No | Free + usage | Tightly integrated with reactive DB backend |
 | **Cloudflare Workflows** | Durable execution on Workers | No | Usage-based | Edge-native durable execution |
 | **Upstash Workflow** | Serverless durable workflows | No | Free + usage | QStash-backed, serverless-first |
+| **Vercel Workflow SDK** | Durable workflow execution for AI agents | No | Usage-based | Streaming + cancellation + reconnectable streams, powers Vercel Open Agents, integrates with AI SDK |
 
 ### Cloud Provider Workflow Engines
 

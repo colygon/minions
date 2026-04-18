@@ -401,6 +401,114 @@ This is disruptive to the Layer B agent-sandbox market: teams that would have us
 
 ---
 
+## Vercel Open Agents
+
+- **Type:** Open Source Template (MIT)
+- **Stars:** 3.7K (396 forks)
+- **GitHub:** https://github.com/vercel-labs/open-agents
+- **Demo:** https://open-agents.dev
+- **Template:** https://vercel.com/templates/template/open-agents
+
+Vercel's reference architecture for building cloud coding agents. Open Agents is not a hosted product — it's a forkable, customizable MIT-licensed template that ships a complete cloud agent system: web UI, durable workflow runtime, sandbox orchestration, and GitHub App integration. Deploy it to Vercel in minutes, then modify it to fit your use case.
+
+### Architectural Principle: "The Agent Is Not the Sandbox"
+
+The most important design decision in Open Agents: the agent executes **outside** the sandbox, not within it. The agent runs as a durable workflow on Vercel's Workflow SDK. The sandbox is only the execution environment for code the agent wants to run.
+
+This separation matters because:
+
+- **Agent execution decouples from request lifecycles** — Chat turns can span many persisted workflow steps that survive request timeouts
+- **Sandbox hibernates and resumes independently** — Sandbox goes to sleep without killing the agent
+- **Model/provider flexibility** — Swap models without touching the sandbox
+- **Sandbox stays single-purpose** — It's an execution environment, not a control plane
+
+### Three-Layer Architecture
+
+1. **Web Layer** — Next.js app handling auth, sessions, chat UI, streaming. Built on Vercel AI SDK + Chat SDK.
+2. **Agent Workflow** — Durable workflow execution via Vercel Workflow SDK. Streaming, cancellation, persistent state across multi-step runs. Reconnectable streams.
+3. **Sandbox VM** — Vercel Sandbox (Firecracker microVM) with filesystem, shell, git, dev servers. Exposes ports 3000, 5173, 4321, 8000. Snapshot-based resume. Hibernates after inactivity.
+
+### Repo Structure
+
+```
+apps/web         — Next.js, workflows, auth, chat UI
+packages/agent   — agent loop, tools, subagents, skills
+packages/sandbox — sandbox abstraction + Vercel integration
+packages/shared  — utilities
+```
+
+### Agent Capabilities
+
+- **Tool suite** — File read/write/edit, grep/glob search, shell commands, task management, web fetch, skill invocation
+- **Skills system** — Modular agent skills in `.agents/skills` with a `skills-lock.json` for versioning (compatible with [vercel-labs/skills](https://github.com/vercel-labs/skills) `npx skills`)
+- **Subagents** — Multi-agent coordination built in
+- **Repo cloning** — Clone any GitHub repo into the sandbox, work on branches
+- **Auto-commit / auto-PR** — Optional, preference-driven (not always on). Can open PRs with summaries.
+- **Session sharing** — Read-only share links for audit/review
+- **Voice input** — ElevenLabs transcription for spoken commands
+- **MCP tool support** — Connect external tools via Model Context Protocol
+
+### Stack
+
+- **Frameworks:** Next.js, Tailwind CSS
+- **SDKs:** Vercel Workflow SDK, Vercel AI SDK, Vercel Chat SDK
+- **Database:** PostgreSQL (required) — works with Neon by default
+- **Cache:** Redis/Upstash KV (optional, for metadata)
+- **Package manager:** Bun (local dev)
+- **Runtime:** 99.3% TypeScript
+
+### Deployment Environment Variables
+
+- **Minimum:** `POSTGRES_URL`, `JWE_SECRET`
+- **Recommended:** `ENCRYPTION_KEY` + Vercel OAuth credentials
+- **Full-featured:** GitHub App (ID, client secret, private key, webhook secret)
+- **Optional:** Redis/KV, ElevenLabs API, custom sandbox snapshots
+
+### GitHub App Integration
+
+Uses the GitHub App's user authorization flow:
+- Repository access via installation
+- Private repo cloning
+- Branch pushing
+- PR creation with automated summaries
+- Webhook events for status updates
+
+Organization-level installations require the app to be public.
+
+### Why This Matters
+
+Open Agents is significant because it codifies a production-ready cloud agent architecture in an MIT-licensed template. Teams that would otherwise spend weeks assembling a web UI + durable workflow + sandbox + GitHub integration can fork Open Agents and customize it. It's the "reference implementation" for the Vercel Agents platform (AI Gateway + Workflow + Sandbox) and a pragmatic starting point for building Claude Managed Agents / Stripe Minions-style systems on Vercel infra.
+
+### When to Pick Open Agents
+
+- You want a production-ready starting point instead of building from scratch
+- You're already on Vercel or want to be
+- You want full control over the agent harness (unlike Claude Managed Agents)
+- You want the "agent outside the sandbox" architectural pattern
+- You need durable multi-step workflows with streaming
+- You want GitHub App integration out of the box
+
+### When to Pick Something Else
+
+- Fastest time-to-market with zero infra → [Claude Managed Agents](/approaches#claude-managed-agents)
+- Tree-search / branching-heavy workflows → [Contree](/sandboxes#contree--the-git-native-sandbox) + custom harness
+- Non-Vercel deployment target → AgentField or a custom stack
+- Heavy GPU requirements → Modal-based harness instead
+
+### Related Vercel Agent Products
+
+Open Agents is the community template. Vercel also ships a broader **Vercel Agents** platform that includes:
+
+- **AI Gateway** — Unified endpoint for model routing, provider failover, embeddings (see [Inference](/inference#routing--gateway-solutions))
+- **Vercel Sandbox** — Firecracker microVM execution (see [Sandboxes](/sandboxes#purpose-built-agent-sandboxes))
+- **Vercel Workflow SDK** — Durable execution primitives
+- **Vercel AI SDK** — TypeScript toolkit for streaming, tool use, structured outputs
+- **Vercel Agent** — Stack-aware agent for the Vercel platform itself
+
+Open Agents stitches these together into a reference application — it's both a product demonstration and a production-ready template.
+
+---
+
 ## OpenAI Symphony
 
 - **Type:** Open Source (Apache 2.0)
